@@ -368,7 +368,6 @@ elif command -v opkg &> /dev/null; then
     LIGHTTPD_GROUP="www-data"
     # and config file
     LIGHTTPD_CFG="lighttpd.conf"
-}
 
 # If neither apt-get or rmp/dnf are found
 else
