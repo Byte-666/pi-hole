@@ -312,7 +312,7 @@ elif command -v rpm &> /dev/null; then
     fi
 
 #OpenWRT
-if command -v opkg &> /dev/null; then
+elif command -v opkg &> /dev/null; then
     # Set some global variables here
     # We don't set them earlier since the family might be Red Hat, so these values would be different
     PKG_MANAGER="opkg"
