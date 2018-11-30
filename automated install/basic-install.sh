@@ -311,6 +311,65 @@ elif command -v rpm &> /dev/null; then
         exit
     fi
 
+#OpenWRT
+if command -v opkg &> /dev/null; then
+    # Set some global variables here
+    # We don't set them earlier since the family might be Red Hat, so these values would be different
+    PKG_MANAGER="opkg"
+    # A variable to store the command used to update the package cache
+    UPDATE_PKG_CACHE="${PKG_MANAGER} update"
+    # An array for something...
+    PKG_INSTALL=(${PKG_MANAGER} install)
+    # grep -c will return 1 retVal on 0 matches, block this throwing the set -e with an OR TRUE
+    PKG_COUNT="${PKG_MANAGER} list-upgradable | wc -l"
+    # iproute2 comes from the ip package
+    iproute_pkg="ip"
+    # Check for and determine version number (major and minor) of current php install
+    if command -v php &> /dev/null; then
+        phpInsVersion="$(php -v | head -n1 | grep -Po '(?<=PHP )[^ ]+')"
+        echo -e "  ${INFO} Existing PHP installation detected : PHP version $phpInsVersion"
+        phpInsMajor="$(echo "$phpInsVersion" | cut -d\. -f1)"
+        phpInsMinor="$(echo "$phpInsVersion" | cut -d\. -f2)"
+        # Is installed php version 7.0 or greater
+        if [ "$(echo "$phpInsMajor.$phpInsMinor < 7.0" | bc )" == 0 ]; then
+            phpInsNewer=true
+        fi
+    fi
+    # Check if installed php is v 7.0, or newer to determine packages to install
+    if [[ "$phpInsNewer" != true ]]; then
+        # Prefer the php metapackage if it's there
+        if ${PKG_MANAGER} install --noaction php > /dev/null 2>&1; then
+            phpVer="php"
+        # fall back on the php5 packages
+        else
+            phpVer="php5"
+        fi
+    else
+        # Newer php is installed, its common, cgi & sqlite counterparts are deps
+        phpVer="php$phpInsMajor.$phpInsMinor"
+    fi
+    # We also need the correct version for `php-sqlite` (which differs across distros)
+    if ${PKG_MANAGER} install --noaction ${phpVer}-sqlite3 > /dev/null 2>&1; then
+        phpSqlite="sqlite3"
+    else
+        phpSqlite="sqlite"
+    fi
+    # Since our install script is so large, we need several other programs to successfully get a machine provisioned
+    # These programs are stored in an array so they can be looped through later
+    INSTALLER_DEPS=(dhcpcd5 git ${iproute_pkg})
+    # Pi-hole itself has several dependencies that also need to be installed
+    PIHOLE_DEPS=(bc cron curl dnsutils iputils-ping lsof netcat psmisc sudo unzip wget idn2 sqlite3 libcap2-bin dns-root-data resolvconf)
+    # The Web dashboard has some that also need to be installed
+    # It's useful to separate the two since our repos are also setup as "Core" code and "Web" code
+    PIHOLE_WEB_DEPS=(lighttpd ${phpVer}-common ${phpVer}-cgi ${phpVer}-${phpSqlite})
+    # The Web server user,
+    LIGHTTPD_USER="www-data"
+    # group,
+    LIGHTTPD_GROUP="www-data"
+    # and config file
+    LIGHTTPD_CFG="lighttpd.conf"
+}
+
 # If neither apt-get or rmp/dnf are found
 else
     # it's not an OS we can support,
