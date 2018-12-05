@@ -356,7 +356,7 @@ elif command -v opkg &> /dev/null; then
     fi
     # Since our install script is so large, we need several other programs to successfully get a machine provisioned
     # These programs are stored in an array so they can be looped through later
-    INSTALLER_DEPS=(dhcpcd5 git ${iproute_pkg})
+    INSTALLER_DEPS=(dhcpcd5 git whiptail ${iproute_pkg})
     # Pi-hole itself has several dependencies that also need to be installed
     PIHOLE_DEPS=(bc cron curl dnsutils iputils-ping lsof netcat psmisc sudo unzip wget idn2 sqlite3 libcap2-bin dns-root-data resolvconf)
     # The Web dashboard has some that also need to be installed
