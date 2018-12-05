@@ -311,7 +311,7 @@ elif command -v rpm &> /dev/null; then
         exit
     fi
 
-#OpenWRT
+# Check if it is OpenWRT
 elif command -v opkg &> /dev/null; then
     # Set some global variables here
     # We don't set them earlier since the family might be Red Hat, so these values would be different
@@ -521,7 +521,7 @@ find_IPv4_information() {
     # Get just the IP address
     IPv4bare=$(awk '{print $7}' <<< "${route}")
     # Append the CIDR notation to the IP address
-    IPV4_ADDRESS=$(ip -o -f inet addr show | grep "${IPv4bare}" |  awk '{print $4}' | awk 'END {print}')
+    IPV4_ADDRESS=$(ip -o -f inet addr show | grep "${IPv4bare}" | awk '{print $4}' | awk 'END {print}')
     # Get the default gateway (the way to reach the Internet)
     IPv4gw=$(awk '{print $3}' <<< "${route}")
 }
@@ -815,6 +815,26 @@ setDHCPCD() {
     static domain_name_servers=127.0.0.1" | tee -a /etc/dhcpcd.conf >/dev/null
 }
 
+# convert CIDR to netmask
+cidr2mask() {
+    local i mask=""
+    local full_octets=$(($1/8))
+    local partial_octet=$(($1%8))
+
+    for ((i=0;i<4;i+=1)); do
+        if [ $i -lt $full_octets ]; then
+            mask+=255
+        elif [ $i -eq $full_octets ]; then
+            mask+=$((256 - 2**(8-$partial_octet)))
+        else
+            mask+=0
+        fi  
+        test $i -lt 3 && mask+=.
+    done
+
+    echo $mask
+}
+
 setStaticIPv4() {
     # Local, named variables
     local IFCFG_FILE
@@ -873,6 +893,40 @@ setStaticIPv4() {
             echo -e "  ${TICK} Set IP address to ${IPV4_ADDRESS%/*}
             You may need to restart after the install is complete"
         fi
+
+    # Check if it is OpenWRT
+    elif command -v uci &> /dev/null; then
+        # If it is
+        IFCFG_FILE=/etc/config/network
+        IPADDR=$(echo "${IPV4_ADDRESS}" | cut -f1 -d/)
+        IPMASK=$(cidr2mask "${CIDR}")
+        # check if the desired IP is already set
+        if grep -Eq "${IPADDR}(\\b|\\/)" "$(uci show network.lan.ipaddr)"; then
+            echo -e "  ${INFO} Static IP already configured"
+        # Otherwise,
+        else
+            # Put the IP in variables without the CIDR notation
+            CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
+            # Backup existing interface configuration:
+            cp "${IFCFG_FILE}" "${IFCFG_FILE}".pihole.orig
+            # Use UCI to save the configuration
+            uci set network.lan.ifname "${PIHOLE_INTERFACE}"
+            uci set network.lan.proto "static"
+            uci set network.lan.ipaddr "${IPADDR}"
+            uci set network.lan.gateway "${IPv4gw}"
+            uci set network.lan.dns1 "$PIHOLE_DNS_1"
+            uci set network.lan.dns2 "$PIHOLE_DNS_2"
+            uci set network.lan.netmask "${IPMASK}"
+            uci commit network
+            # Use ip to immediately set the new address
+            ip addr replace dev "${PIHOLE_INTERFACE}" "${IPV4_ADDRESS}"
+            # Reload the networking
+            /etc/init.d/network reload
+            # Show a warning that the user may need to restart
+            echo -e "  ${TICK} Set IP address to ${IPV4_ADDRESS%/*}
+            You may need to restart after the install is complete"
+        fi
+                
     # If all that fails,
     else
         # show an error and exit
