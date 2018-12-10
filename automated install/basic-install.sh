@@ -819,8 +819,8 @@ setDHCPCD() {
 cidr2mask() {
     local i=0
     local mask=""
-    local full_octets=$(($1/8))
-    local partial_octet=$(($1%8))
+    local full_octets="$(($1/8))"
+    local partial_octet="$(($1%8))"
 
     while [ "$i" -lt 4 ]; do
         if [ $i -lt $full_octets ]; then
