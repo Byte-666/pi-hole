@@ -817,19 +817,21 @@ setDHCPCD() {
 
 # convert CIDR to netmask
 cidr2mask() {
-    local i mask=""
+    local i=0
+    local mask=""
     local full_octets=$(($1/8))
     local partial_octet=$(($1%8))
 
-    for ((i=0;i<4;i+=1)); do
+    while [ "$i" -lt 4 ]; do
         if [ $i -lt $full_octets ]; then
-            mask+=255
+            mask="${mask}255"
         elif [ $i -eq $full_octets ]; then
-            mask+=$((256 - 2**(8-$partial_octet)))
+            mask="${mask}$((256 - 2**(8-$partial_octet)))"
         else
-            mask+=0
+            mask="${mask}0"
         fi  
-        test $i -lt 3 && mask+=.
+        test $i -lt 3 && mask="${mask}."
+        i=$(( i + 1 ))
     done
 
     echo $mask
