@@ -901,14 +901,14 @@ setStaticIPv4() {
         # If it is
         IFCFG_FILE=/etc/config/network
         IPADDR=$(echo "${IPV4_ADDRESS}" | cut -f1 -d/)
+        # Put the IP in variables with the CIDR notation
+        CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
         IPMASK=$(cidr2mask "${CIDR}")
         # check if the desired IP is already set
         if grep -Eq "${IPADDR}(\\b|\\/)" "$(uci show network.lan.ipaddr)"; then
             echo -e "  ${INFO} Static IP already configured"
         # Otherwise,
         else
-            # Put the IP in variables without the CIDR notation
-            CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
             # Backup existing interface configuration:
             cp "${IFCFG_FILE}" "${IFCFG_FILE}".pihole.orig
             # Use UCI to save the configuration
