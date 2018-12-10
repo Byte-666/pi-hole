@@ -905,7 +905,7 @@ setStaticIPv4() {
         CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
         IPMASK=$(cidr2mask "${CIDR}")
         # check if the desired IP is already set
-        CFG="$(uci show network.lan.ipaddr 2>&1)"
+        CFG="$(uci show network.lan.ipaddr &> /dev/null)"
         if grep -Eq "${IPADDR}(\\b|\\/)" "${CFG}"; then
             echo -e "  ${INFO} Static IP already configured"
         # Otherwise,
