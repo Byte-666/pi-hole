@@ -906,12 +906,13 @@ setStaticIPv4() {
         IPMASK=$(cidr2mask "${CIDR}")
         # check if the desired IP is already set
         echo 1
-        CFG=$(uci show network.lan.ipaddr 2>&1)
+        UCICFG=$(uci show network.lan.ipaddr 2>&1)
         echo $CFG
-        if grep -Eq "${IPADDR}(\\b|\\/)" "${CFG}"; then
+        if grep -Eq "${IPADDR}(\\b|\\/)" "${UCICFG}"; then
             echo -e "  ${INFO} Static IP already configured"
         # Otherwise,
         else
+            echo 2
             # Backup existing interface configuration:
             cp "${IFCFG_FILE}" "${IFCFG_FILE}".pihole.orig
             # Use UCI to save the configuration
