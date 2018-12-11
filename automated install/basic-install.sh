@@ -842,6 +842,7 @@ setStaticIPv4() {
     local IFCFG_FILE
     local IPADDR
     local CIDR
+    local UCICFG
     # For the Debian family, if dhcpcd.conf exists,
     if [[ -f "/etc/dhcpcd.conf" ]]; then
         # check if the IP is already in the file
@@ -858,7 +859,7 @@ setStaticIPv4() {
             You may need to restart after the install is complete"
         fi
     # If it's not Debian, check if it's the Fedora family by checking for the file below
-    elif [[ -f "/etc/sysconfig/network-scripts/ifcfg-${PIHOLE_INTERFACE}" ]];then
+    elif [[ -f "/etc/sysconfig/network-scripts/ifcfg-${PIHOLE_INTERFACE}" ]]; then
         # If it exists,
         IFCFG_FILE=/etc/sysconfig/network-scripts/ifcfg-${PIHOLE_INTERFACE}
         IPADDR=$(echo "${IPV4_ADDRESS}" | cut -f1 -d/)
@@ -905,8 +906,7 @@ setStaticIPv4() {
         CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
         IPMASK=$(cidr2mask "${CIDR}")
         # check if the desired IP is already set
-        echo $IPMASK
-        UCICFG=$(uci show network.lan.ipaddr 2>&1 > /dev/null)
+        UCICFG=$(uci show network.lan.ipaddr 2>&1)
         echo $UCICFG
         if grep -Eq "${IPADDR}(\\b|\\/)" "${UCICFG}"; then
             echo -e "  ${INFO} Static IP already configured"
