@@ -311,7 +311,7 @@ elif command -v rpm &> /dev/null; then
         exit
     fi
 
-# Check if it is OpenWRT
+# Check if it is the OpenWRT
 elif command -v opkg &> /dev/null; then
     # Set some global variables here
     # We don't set them earlier since the family might be Red Hat, so these values would be different
@@ -896,7 +896,7 @@ setStaticIPv4() {
             You may need to restart after the install is complete"
         fi
 
-    # Check if it is OpenWRT
+    # Check if it is the OpenWRT
     elif command -v uci &> /dev/null; then
         # If it is
         IFCFG_FILE=/etc/config/network
@@ -906,7 +906,7 @@ setStaticIPv4() {
         IPMASK=$(cidr2mask "${CIDR}")
         # check if the desired IP is already set
         echo 1
-        CFG=$(uci show network.lan.ipaddr &> /dev/null)
+        CFG=$(uci show network.lan.ipaddr 2>&1)
         echo $CFG
         if grep -Eq "${IPADDR}(\\b|\\/)" "${CFG}"; then
             echo -e "  ${INFO} Static IP already configured"
