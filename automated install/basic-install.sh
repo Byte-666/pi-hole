@@ -841,6 +841,7 @@ setStaticIPv4() {
     # Local, named variables
     local IFCFG_FILE
     local IPADDR
+    local IPMASK
     local CIDR
     local UCICFG
     # For the Debian family, if dhcpcd.conf exists,
@@ -905,6 +906,7 @@ setStaticIPv4() {
         # Put the IP in variables with the CIDR notation
         CIDR=$(echo "${IPV4_ADDRESS}" | cut -f2 -d/)
         IPMASK=$(cidr2mask "${CIDR}")
+        echo "0${IPMASK}1"
         # check if the desired IP is already set
         UCICFG=$(uci show network.lan.ipaddr 2>&1)
         echo "0${UCICFG}1"
