@@ -915,13 +915,13 @@ setStaticIPv4() {
             # Backup existing interface configuration:
             cp "${IFCFG_FILE}" "${IFCFG_FILE}".pihole.orig
             # Use UCI to save the configuration
-            uci set network.lan.ifname "${PIHOLE_INTERFACE}"
-            uci set network.lan.proto "static"
-            uci set network.lan.ipaddr "${IPADDR}"
-            uci set network.lan.gateway "${IPv4gw}"
-            uci set network.lan.dns1 "${PIHOLE_DNS_1}"
-            uci set network.lan.dns2 "${PIHOLE_DNS_2}"
-            uci set network.lan.netmask "${IPMASK}"
+            uci set network.lan.ifname="${PIHOLE_INTERFACE}"
+            uci set network.lan.proto="static"
+            uci set network.lan.ipaddr="${IPADDR}"
+            uci set network.lan.gateway="${IPv4gw}"
+            uci set network.lan.dns1="${PIHOLE_DNS_1}"
+            uci set network.lan.dns2="${PIHOLE_DNS_2}"
+            uci set network.lan.netmask="${IPMASK}"
             uci commit network
             # Use ip to immediately set the new address
             ip addr replace dev "${PIHOLE_INTERFACE}" "${IPV4_ADDRESS}"
